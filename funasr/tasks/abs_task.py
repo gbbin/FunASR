@@ -1376,6 +1376,9 @@ class AbsTask(ABC):
                     distributed_option=distributed_option,
                     mode="valid",
                 )
+            elif args.dataset_type == "diarization":
+                train_iter_factory = DiarDataLoader(args.train_data_file, args.dataset_conf)
+                valid_iter_factory = DiarDataLoader(args.valid_data_file, args.dataset_conf)
             else:
                 raise ValueError(f"Not supported dataset_type={args.dataset_type}")
 
