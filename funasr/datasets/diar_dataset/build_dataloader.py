@@ -11,7 +11,8 @@ def custom_collate(batch):
     ys = [torch.from_numpy(y.astype(np.float32)) for y in ys]
     ts = [torch.from_numpy(t.astype(np.float32)) for t in ts]
     orders = [torch.from_numpy(o.astype(np.int64)) for o in orders]
-    return ys, ts, orders
+    data = dict(ys=ys, ts=ts, orders=orders)
+    return data
 
 
 class DiarDataLoader(AbsIterFactory):
