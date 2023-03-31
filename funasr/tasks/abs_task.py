@@ -1377,6 +1377,7 @@ class AbsTask(ABC):
                     mode="valid",
                 )
             elif args.dataset_type == "diarization":
+                from funasr.datasets.diar_dataset.build_dataloader import DiarDataLoader
                 train_iter_factory = DiarDataLoader(args.train_data_file, args.dataset_conf)
                 valid_iter_factory = DiarDataLoader(args.valid_data_file, args.dataset_conf)
             else:
