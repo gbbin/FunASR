@@ -181,7 +181,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
             rank=$i
             local_rank=$i
             gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
-            diar_train.py \
+            diar_train_eend_ola.py \
                 --gpu_id $gpu_id \
                 --use_preprocessor false \
                 --dataset_type $dataset_type \
