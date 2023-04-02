@@ -7,11 +7,11 @@ from funasr.iterators.abs_iter_factory import AbsIterFactory
 
 
 def custom_collate(batch):
-    sample_names, ys, ts, orders = zip(*batch)
-    ys = [torch.from_numpy(y.astype(np.float32)) for y in ys]
+    sample_names, xs, ts, orders = zip(*batch)
+    xs = [torch.from_numpy(x.astype(np.float32)) for x in xs]
     ts = [torch.from_numpy(t.astype(np.float32)) for t in ts]
     orders = [torch.from_numpy(o.astype(np.int64)) for o in orders]
-    data = dict(ys=ys, ts=ts, orders=orders)
+    data = dict(xs=xs, ts=ts, orders=orders)
     return sample_names, data
 
 

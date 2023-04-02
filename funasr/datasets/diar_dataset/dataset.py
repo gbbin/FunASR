@@ -17,10 +17,10 @@ class DiarizationDataset(Dataset):
 
     def __getitem__(self, idx):
         sample_name, feature_path, label_path = self.chunk_inputs[idx]
-        Y_ss = kaldiio.load_mat(feature_path)
+        X_ss = kaldiio.load_mat(feature_path)
         T_ss =  kaldiio.load_mat(label_path)
 
-        order = np.arange(Y_ss.shape[0])
+        order = np.arange(X_ss.shape[0])
         np.random.shuffle(order)
 
-        return sample_name, Y_ss, T_ss, order
+        return sample_name, X_ss, T_ss, order
