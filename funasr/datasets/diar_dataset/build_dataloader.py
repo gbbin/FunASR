@@ -7,12 +7,12 @@ from funasr.iterators.abs_iter_factory import AbsIterFactory
 
 
 def custom_collate(batch):
-    ys, ts, orders = zip(*batch)
+    sample_names, ys, ts, orders = zip(*batch)
     ys = [torch.from_numpy(y.astype(np.float32)) for y in ys]
     ts = [torch.from_numpy(t.astype(np.float32)) for t in ts]
     orders = [torch.from_numpy(o.astype(np.int64)) for o in orders]
     data = dict(speech=ys, labels=ts, orders=orders)
-    return data
+    return sample_names, data
 
 
 class DiarDataLoader(AbsIterFactory):

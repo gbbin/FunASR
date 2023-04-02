@@ -23,4 +23,4 @@ class DiarizationDataset(Dataset):
         order = np.arange(Y_ss.shape[0])
         np.random.shuffle(order)
 
-        return Y_ss, T_ss, order
+        return sample_name, Y_ss, T_ss, order
