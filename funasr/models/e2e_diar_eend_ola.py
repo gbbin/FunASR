@@ -126,7 +126,7 @@ class DiarEENDOLAModel(AbsESPnetModel):
         pse_ys = [torch.matmul(e, pad_att.permute(1, 0)) for e, pad_att in zip(emb, pad_attractors)]
         pse_logits = self.forward_post_net(pse_ys, torch.tensor(ilens))
         pse_loss = cal_power_loss(pse_logits, power_ts)
-        loss = pse_loss + pit_loss + attractor_loss * self.attractor_loss_ratio
+        loss = pse_loss + pit_loss + self.attractor_loss_weight * attractor_loss
 
         stats = dict()
         stats["pse_loss"] = pse_loss.detach()
