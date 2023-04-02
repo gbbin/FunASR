@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch import nn
 
 
-def standard_loss(ys, ts, label_delay=0):
+def standard_loss(ys, ts):
     losses = [F.binary_cross_entropy(torch.sigmoid(y), t) * len(y) for y, t in zip(ys, ts)]
     loss = torch.sum(torch.stack(losses))
     n_frames = torch.from_numpy(np.array(np.sum([t.shape[0] for t in ts]))).to(torch.float32).to(ys[0].device)

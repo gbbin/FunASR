@@ -10,7 +10,6 @@ from typing import Union
 import numpy as np
 import torch
 import torch.nn as  nn
-import torch.nn.functional as F
 from typeguard import check_argument_types
 
 from funasr.models.frontend.wav_frontend import WavFrontendMel23
@@ -32,16 +31,15 @@ else:
 
 
 def pad_tensor(tensor, out_size):
-    # pad label's speaker-dim to be model's n_speakers
+    tensor_padded = []
     for i, t in enumerate(tensor):
         if t.shape[1] < out_size:
-            tensor[i] = F.pad(
-                t,
-                (0, out_size - t.shape[1], 0, 0),
-                mode='constant',
-                value=0.
-            )
-    return tensor
+            # padding
+            tensor_padded.append(
+                torch.cat([t, torch.zeros(t.shape[0], out_size - t.shape[1]).to(torch.float32).to(t.device)], dim=1))
+        else:
+            tensor_padded.append(t)
+    return tensor_padded
 
 
 def pad_attractor(att, max_n_speakers):
