@@ -94,7 +94,7 @@ class DiarEENDOLAModel(AbsESPnetModel):
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
         n_speakers = [t.shape[1] for t in ts]
         ilens = [x.shape[0] for x in xs]
-        emb = self.forward_core(xs, ilens)
+        emb = self.forward_encoder(xs, ilens)
         batch_size = len(xs)
         attractor_loss, attractors = self.eda([e[order] for e, order in zip(emb, orders)], n_speakers)
 
