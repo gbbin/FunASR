@@ -53,7 +53,7 @@ train_set=train
 valid_set=dev
 test_sets="test_clean test_other dev_clean dev_other"
 
-asr_config=conf/train_asr_conformer.yaml
+asr_config=conf/train.yaml
 #asr_config=conf/train_asr_conformer_uttnorm.yaml
 model_dir="baseline_$(basename "${asr_config}" .yaml)_${feats_type}_${lang}_${token_type}_${tag}"
 
