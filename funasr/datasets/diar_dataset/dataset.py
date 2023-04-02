@@ -8,17 +8,15 @@ class DiarizationDataset(Dataset):
 
     def __init__(self, data_file):
         self.data_file = data_file
-        self.chunk_indices = []
-
         self.lines = [line.strip().split() for line in open(data_file)]
-        self.chunk_indices = [(x[0], x[1], x[2]) for x in self.lines]
-        logging.info("total chunks: {}".format(len(self.chunk_indices)))
+        self.chunk_inputs = [(x[0], x[1], x[2]) for x in self.lines]
+        logging.info("total chunks: {}".format(len(self.chunk_inputs)))
 
     def __len__(self):
-        return len(self.chunk_indices)
+        return len(self.chunk_inputs)
 
     def __getitem__(self, idx):
-        sample_name, feature_path, label_path = self.chunk_indices[idx]
+        sample_name, feature_path, label_path = self.chunk_inputs[idx]
         Y_ss = kaldiio.load_mat(feature_path)
         T_ss =  kaldiio.load_mat(label_path)
 
