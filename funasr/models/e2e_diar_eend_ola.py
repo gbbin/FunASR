@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from distutils.version import LooseVersion
 from typing import Dict
 from typing import Tuple
+from typing import Union
 
 import numpy as np
 import torch
@@ -41,7 +42,7 @@ class DiarEENDOLAModel(AbsESPnetModel):
 
     def __init__(
             self,
-            frontend: WavFrontendMel23,
+            frontend: Union[WavFrontendMel23, None],
             encoder: EENDOLATransformerEncoder,
             encoder_decoder_attractor: EncoderDecoderAttractor,
             n_units: int = 256,
