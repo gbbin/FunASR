@@ -1,8 +1,9 @@
 import logging
 
+import kaldiio
 import numpy as np
 from torch.utils.data import Dataset
-import kaldiio
+
 
 class DiarizationDataset(Dataset):
 
@@ -18,7 +19,8 @@ class DiarizationDataset(Dataset):
     def __getitem__(self, idx):
         sample_name, feature_path, label_path = self.chunk_inputs[idx]
         X_ss = kaldiio.load_mat(feature_path)
-        T_ss =  kaldiio.load_mat(label_path)
+        T_ss = kaldiio.load_mat(label_path)
+        T_ss = T_ss.reshape(X_ss.shape[0], -1)
 
         order = np.arange(X_ss.shape[0])
         np.random.shuffle(order)
