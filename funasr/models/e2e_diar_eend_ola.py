@@ -10,6 +10,7 @@ from typing import Union
 import numpy as np
 import torch
 import torch.nn as  nn
+import torch.nn.functional as F
 from typeguard import check_argument_types
 
 from funasr.models.frontend.wav_frontend import WavFrontendMel23
@@ -30,7 +31,20 @@ else:
         yield
 
 
-def pad_tensor(att, max_n_speakers):
+def pad_tensor(tensor, out_size):
+    # pad label's speaker-dim to be model's n_speakers
+    for i, t in enumerate(tensor):
+        if t.shape[1] < out_size:
+            tensor[i] = F.pad(
+                t,
+                (0, out_size - t.shape[1], 0, 0),
+                mode='constant',
+                value=0.
+            )
+    return tensor
+
+
+def pad_attractor(att, max_n_speakers):
     C, D = att.shape
     if C < max_n_speakers:
         att = torch.cat([att, torch.zeros(max_n_speakers - C, D).to(torch.float32).to(att.device)], dim=0)
@@ -101,8 +115,8 @@ class DiarEENDOLAModel(AbsESPnetModel):
         # PIT
         ys = [torch.matmul(e, att.permute(1, 0)) for e, att in zip(emb, attractors)]
         max_n_speakers = max(n_speakers)
-        ts_padded = [pad_tensor(t, max_n_speakers) for t in ts]
-        ys_padded = [pad_tensor(y, max_n_speakers) for y in ys]
+        ts_padded = pad_tensor(ts, max_n_speakers)
+        ys_padded = pad_tensor(ys, max_n_speakers)
         _, labels = batch_pit_n_speaker_loss(ys_padded, ts_padded, n_speakers)
         pit_loss = standard_loss(ys, labels)
 
@@ -110,7 +124,7 @@ class DiarEENDOLAModel(AbsESPnetModel):
         with torch.no_grad():
             power_ts = [create_powerlabel(label.cpu().numpy(), self.mapping_dict, self.max_n_speaker).
                             to(emb[0].device, non_blocking=True) for label in labels]
-        pad_attractors = [pad_tensor(att, self.max_n_speaker) for att in attractors]
+        pad_attractors = [pad_attractor(att, self.max_n_speaker) for att in attractors]
         pse_ys = [torch.matmul(e, pad_att.permute(1, 0)) for e, pad_att in zip(emb, pad_attractors)]
         pse_logits = self.forward_post_net(pse_ys, torch.tensor(ilens))
         pse_loss = cal_power_loss(pse_logits, power_ts)
@@ -157,7 +171,7 @@ class DiarEENDOLAModel(AbsESPnetModel):
                 NotImplementedError('n_speakers or threshold has to be given.')
         raw_n_speakers = [att.shape[0] for att in attractors_active]
         attractors = [
-            pad_tensor(att, self.max_n_speaker) if att.shape[0] <= self.max_n_speaker else att[:self.max_n_speaker]
+            pad_attractor(att, self.max_n_speaker) if att.shape[0] <= self.max_n_speaker else att[:self.max_n_speaker]
             for att in attractors_active]
         ys = [torch.matmul(e, att.permute(1, 0)) for e, att in zip(emb, attractors)]
         logits = self.forward_post_net(ys, speech_lengths.cpu().to(torch.int64))
