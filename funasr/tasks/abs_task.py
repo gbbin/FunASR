@@ -464,6 +464,12 @@ class AbsTask(ABC):
             default=sys.maxsize,
             help="The maximum number update step to train",
         )
+        parser.add_argument(
+            "--batch_interval",
+            type=int,
+            default=10000,
+            help="The batch interval for saving model.",
+        )
         group.add_argument(
             "--patience",
             type=int_or_none,
