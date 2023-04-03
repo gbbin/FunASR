@@ -27,8 +27,9 @@ optim_conf:
     lr: 0.0625
     betas: [0.9, 0.98]
     eps: 1.0e-9
-scheduler: warmuplr
+scheduler: noamlr
 scheduler_conf:
+    model_size: 256
     warmup_steps: 100000
 
 dataset_conf:
