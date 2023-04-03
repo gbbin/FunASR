@@ -20,10 +20,11 @@ dumpdir=dump/simu_data/data
 feats_type=fbank
 token_type=bpe
 dataset_type=diarization
-scp=feats_2spk.scp
+scp=feats.scp
 type=kaldi_ark
 stage=3
 stop_stage=4
+init_param=
 
 # feature configuration
 feats_dim=345
@@ -191,6 +192,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
                 --output_dir ${exp_dir}/exp/${model_dir} \
                 --config $asr_config \
                 --input_size $feats_dim \
+                --init_param $init_param \
                 --ngpu $gpu_num \
                 --num_worker_count $count \
                 --multiprocessing_distributed true \
