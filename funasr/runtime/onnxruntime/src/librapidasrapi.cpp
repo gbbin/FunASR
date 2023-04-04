@@ -101,7 +101,7 @@ extern "C" {
 		return pResult;
 	}
 
-	_RAPIDASRAPI RPASR_RESULT RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback)
+	_RAPIDASRAPI RPASR_RESULT RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback, bool timeStat=true)
 	{
 		Model* pRecogObj = (Model*)handle;
 		if (!pRecogObj)
@@ -127,7 +127,15 @@ extern "C" {
 			if (fnCallback)
 				fnCallback(nStep, nTotal);
 		}
-	
+
+		if (!timeStat)
+		{
+			((ModelImp*)pRecogObj)->total_fe_time=0;
+			((ModelImp*)pRecogObj)->total_lfr_time=0;
+			((ModelImp*)pRecogObj)->total_cmvn_time=0;
+			((ModelImp*)pRecogObj)->total_fwd_time=0;
+		}
+
 		return pResult;
 	}
 

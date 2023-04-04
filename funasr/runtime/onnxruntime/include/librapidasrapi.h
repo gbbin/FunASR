@@ -59,7 +59,7 @@ _RAPIDASRAPI RPASR_RESULT	RapidAsrRecogPCMBuffer(RPASR_HANDLE handle, const char
 
 _RAPIDASRAPI RPASR_RESULT	RapidAsrRecogPCMFile(RPASR_HANDLE handle, const char* szFileName, RPASR_MODE Mode, QM_CALLBACK fnCallback);
 
-_RAPIDASRAPI RPASR_RESULT	RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback);
+_RAPIDASRAPI RPASR_RESULT	RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback, bool timeStat=true);
 
 _RAPIDASRAPI const char*	RapidAsrGetResult(RPASR_RESULT Result,int nIndex);
 
