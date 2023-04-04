@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     printf("Model initialization takes %lfs.\n", (double)modle_init_micros / 1000000);
 
     // warm up
-    for (size_t i = 0; i < 30; i++)
+    for (size_t i = 0; i < 0; i++)
     {
         RPASR_RESULT Result=RapidAsrRecogFile(AsrHanlde, wav_list[0].c_str(), RASR_NONE, NULL);
     }
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     // forward
     float snippet_time = 0.0f;
     float total_length = 0.0f;
-    long total_time = 0.0f;
+    long total_time = 0;
     
     for (size_t i = 0; i < wav_list.size(); i++)
     {

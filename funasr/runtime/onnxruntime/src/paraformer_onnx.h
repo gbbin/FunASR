@@ -44,6 +44,11 @@ namespace paraformer {
         string forward_chunk(float* din, int len, int flag);
         string forward(float* din, int len, int flag);
         string rescoring();
+        // details
+        long total_fe_time = 0;
+        long total_lfr_time = 0;
+        long total_cmvn_time = 0;
+        long total_fwd_time = 0;
 
     };
 

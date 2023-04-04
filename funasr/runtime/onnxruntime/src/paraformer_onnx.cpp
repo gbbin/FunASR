@@ -1,5 +1,11 @@
 #include "precomp.h"
 
+#ifndef _WIN32
+#include <sys/time.h>
+#else
+#include <win_func.h>
+#endif
+
 using namespace std;
 using namespace paraformer;
 
@@ -52,6 +58,12 @@ ModelImp::ModelImp(const char* path,int nNumThread, bool quantize)
 
 ModelImp::~ModelImp()
 {
+    long total = total_fe_time+total_lfr_time+total_cmvn_time+total_fwd_time;
+    printf("total_fe_time %ld, %05lf\n",   total_fe_time, (float)total_fe_time/total);
+    printf("total_lfr_time %ld, %05lf\n",  total_lfr_time, (float)total_lfr_time/total);
+    printf("total_cmvn_time %ld, %05lf\n", total_cmvn_time, (float)total_cmvn_time/total);
+    printf("total_fwd_time %ld, %05lf\n",  total_fwd_time, (float)total_fwd_time/total);
+
     if(fe)
         delete fe;
     if (m_session)
@@ -159,14 +171,37 @@ string ModelImp::greedy_search(float * in, int nLen )
 
 string ModelImp::forward(float* din, int len, int flag)
 {
+    struct timeval fe_start, fe_end;
+    struct timeval lfr_start, lfr_end;
+    struct timeval cmvn_start, cmvn_end;
+    struct timeval fwd_start, fwd_end;
 
     Tensor<float>* in;
+    //extract feature
+    gettimeofday(&fe_start, NULL);
     fe->insert(din, len, flag);
     fe->fetch(in);
+    gettimeofday(&fe_end, NULL);
+    long seconds = (fe_end.tv_sec - fe_start.tv_sec);
+    long taking_micros = ((seconds * 1000000) + fe_end.tv_usec) - (fe_start.tv_usec);
+    total_fe_time += taking_micros;
+    
+    gettimeofday(&lfr_start, NULL);
     apply_lfr(in);
-    apply_cmvn(in);
-    Ort::RunOptions run_option;
+    gettimeofday(&lfr_end, NULL);
+    seconds = (lfr_end.tv_sec - lfr_start.tv_sec);
+    taking_micros = ((seconds * 1000000) + lfr_end.tv_usec) - (lfr_start.tv_usec);
+    total_lfr_time += taking_micros;
 
+    gettimeofday(&cmvn_start, NULL);
+    apply_cmvn(in);
+    gettimeofday(&cmvn_end, NULL);
+    seconds = (cmvn_end.tv_sec - cmvn_start.tv_sec);
+    taking_micros = ((seconds * 1000000) + cmvn_end.tv_usec) - (cmvn_start.tv_usec);
+    total_cmvn_time += taking_micros;
+
+    gettimeofday(&fwd_start, NULL);
+    Ort::RunOptions run_option;
     std::array<int64_t, 3> input_shape_{ in->size[0],in->size[2],in->size[3] };
     Ort::Value onnx_feats = Ort::Value::CreateTensor<float>(m_memoryInfo,
         in->buff,
@@ -202,7 +237,10 @@ string ModelImp::forward(float* din, int len, int flag)
     {
         result = "";
     }
-
+    gettimeofday(&fwd_end, NULL);
+    seconds = (fwd_end.tv_sec - fwd_start.tv_sec);
+    taking_micros = ((seconds * 1000000) + fwd_end.tv_usec) - (fwd_start.tv_usec);
+    total_fwd_time += taking_micros;
 
     if(in)
         delete in;
