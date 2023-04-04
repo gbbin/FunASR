@@ -101,7 +101,7 @@ extern "C" {
 		return pResult;
 	}
 
-	_RAPIDASRAPI RPASR_RESULT RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback, bool timeStat=true)
+	_RAPIDASRAPI RPASR_RESULT RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback, bool timeStat)
 	{
 		Model* pRecogObj = (Model*)handle;
 		if (!pRecogObj)
