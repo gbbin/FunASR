@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
         if(Result){
             string msg = RapidAsrGetResult(Result, 0);
-            printf("Result: %s \n", msg);
+            printf("Result: %s \n", msg.c_str());
 
             snippet_time = RapidAsrGetRetSnippetTime(Result);
             total_length += snippet_time;
