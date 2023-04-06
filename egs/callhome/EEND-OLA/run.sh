@@ -20,7 +20,8 @@ dumpdir=dump/simu_data/data
 feats_type=fbank
 token_type=bpe
 dataset_type=diarization
-scp=feats_2spk.scp
+simu_2spk_scp=feats_2spk.scp
+simu_scp=feats_2spk.scp
 type=kaldi_ark
 stage=3
 stop_stage=4
@@ -167,10 +168,53 @@ fi
 # Training Stage
 world_size=$gpu_num  # run on one machine
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
-    echo "stage 3: Training"
-    mkdir -p ${exp_dir}/exp/${model_dir}
-    mkdir -p ${exp_dir}/exp/${model_dir}/log
-    INIT_FILE=${exp_dir}/exp/${model_dir}/ddp_init
+    echo "stage 3: Training on 2-spk simulated dataset"
+#    mkdir -p ${exp_dir}/exp/${model_dir}/simu_train_2spk
+#    mkdir -p ${exp_dir}/exp/${model_dir}/simu_train_2spk/log
+#    INIT_FILE=${exp_dir}/exp/${model_dir}/simu_train_2spk/ddp_init
+#    if [ -f $INIT_FILE ];then
+#        rm -f $INIT_FILE
+#    fi
+#    init_method=file://$(readlink -f $INIT_FILE)
+#    echo "$0: init method is $init_method"
+#    for ((i = 0; i < $gpu_num; ++i)); do
+#        {
+#            rank=$i
+#            local_rank=$i
+#            gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
+#            diar_train_eend_ola.py \
+#                --gpu_id $gpu_id \
+#                --use_preprocessor false \
+#                --dataset_type $dataset_type \
+#                --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_2spk_scp} \
+#                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_2spk_scp} \
+#                --resume true \
+#                --output_dir ${exp_dir}/exp/${model_dir}/simu_train_2spk \
+#                --config $asr_config \
+#                --input_size $feats_dim \
+#                --ngpu $gpu_num \
+#                --num_worker_count $count \
+#                --multiprocessing_distributed true \
+#                --dist_init_method $init_method \
+#                --dist_world_size $world_size \
+#                --dist_rank $rank \
+#                --local_rank $local_rank 1> ${exp_dir}/exp/${model_dir}/simu_train_2spk/log/train.log.$i 2>&1
+#        } &
+#        done
+#        wait
+
+    average_start=91
+    average_end=100
+    nlast_models=`eval echo ${exp_dir}/exp/${model_dir}/simu_train_2spk/{$average_start..$average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${model_dir}/simu_train_2spk/epoch_${average_start}_${average_end}.ave.pb
+    average_nlast_models.py $avg_model $nlast_models
+fi
+
+if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
+    echo "stage 4: Training on all-spk simulated dataset"
+    mkdir -p ${exp_dir}/exp/${model_dir}/simu_train_allspk
+    mkdir -p ${exp_dir}/exp/${model_dir}/simu_train_allspk/log
+    INIT_FILE=${exp_dir}/exp/${model_dir}/simu_train_allspk/ddp_init
     if [ -f $INIT_FILE ];then
         rm -f $INIT_FILE
     fi
@@ -185,10 +229,10 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
                 --gpu_id $gpu_id \
                 --use_preprocessor false \
                 --dataset_type $dataset_type \
-                --train_data_file $feats_dir/$dumpdir/${train_set}/${scp} \
-                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${scp} \
+                --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_scp} \
+                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_scp} \
                 --resume true \
-                --output_dir ${exp_dir}/exp/${model_dir} \
+                --output_dir ${exp_dir}/exp/${model_dir}//simu_train_allspk \
                 --config $asr_config \
                 --input_size $feats_dim \
                 --ngpu $gpu_num \
@@ -197,62 +241,68 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
                 --dist_init_method $init_method \
                 --dist_world_size $world_size \
                 --dist_rank $rank \
-                --local_rank $local_rank 1> ${exp_dir}/exp/${model_dir}/log/train.log.$i 2>&1
+                --local_rank $local_rank 1> ${exp_dir}/exp/${model_dir}/simu_train_allspk/log/train.log.$i 2>&1
         } &
         done
         wait
+
+    average_start=91
+    average_end=100
+    nlast_models=`eval echo ${exp_dir}/exp/${model_dir}/simu_train_allspk/{$average_start..$average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${model_dir}/simu_train_allspk/epoch_${average_start}_${average_end}.ave.pb
+    average_nlast_models.py $avg_model $nlast_models
 fi
 
-# Testing Stage
-if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
-    echo "stage 4: Inference"
-    for dset in ${test_sets}; do
-        asr_exp=${exp_dir}/exp/${model_dir}
-        inference_tag="$(basename "${inference_config}" .yaml)"
-        _dir="${asr_exp}/${inference_tag}/${inference_asr_model}/${dset}"
-        _logdir="${_dir}/logdir"
-        if [ -d ${_dir} ]; then
-            echo "${_dir} is already exists. if you want to decode again, please delete this dir first."
-            exit 0
-        fi
-        mkdir -p "${_logdir}"
-        _data="${feats_dir}/${dumpdir}/${dset}"
-        key_file=${_data}/${scp}
-        num_scp_file="$(<${key_file} wc -l)"
-        _nj=$([ $inference_nj -le $num_scp_file ] && echo "$inference_nj" || echo "$num_scp_file")
-        split_scps=
-        for n in $(seq "${_nj}"); do
-            split_scps+=" ${_logdir}/keys.${n}.scp"
-        done
-        # shellcheck disable=SC2086
-        utils/split_scp.pl "${key_file}" ${split_scps}
-        _opts=
-        if [ -n "${inference_config}" ]; then
-            _opts+="--config ${inference_config} "
-        fi
-        ${infer_cmd} --gpu "${_ngpu}" --max-jobs-run "${_nj}" JOB=1:"${_nj}" "${_logdir}"/asr_inference.JOB.log \
-            python -m funasr.bin.asr_inference_launch \
-                --batch_size 1 \
-                --ngpu "${_ngpu}" \
-                --njob ${njob} \
-                --gpuid_list ${gpuid_list} \
-                --data_path_and_name_and_type "${_data}/${scp},speech,${type}" \
-                --key_file "${_logdir}"/keys.JOB.scp \
-                --asr_train_config "${asr_exp}"/config.yaml \
-                --asr_model_file "${asr_exp}"/"${inference_asr_model}" \
-                --output_dir "${_logdir}"/output.JOB \
-                --mode asr \
-                ${_opts}
-
-        for f in token token_int score text; do
-            if [ -f "${_logdir}/output.1/1best_recog/${f}" ]; then
-                for i in $(seq "${_nj}"); do
-                    cat "${_logdir}/output.${i}/1best_recog/${f}"
-                done | sort -k1 >"${_dir}/${f}"
-            fi
-        done
-        python utils/compute_wer.py ${_data}/text ${_dir}/text ${_dir}/text.cer
-        tail -n 3 ${_dir}/text.cer > ${_dir}/text.cer.txt
-        cat ${_dir}/text.cer.txt
-    done
-fi
+## Testing Stage
+#if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
+#    echo "stage 4: Inference"
+#    for dset in ${test_sets}; do
+#        asr_exp=${exp_dir}/exp/${model_dir}
+#        inference_tag="$(basename "${inference_config}" .yaml)"
+#        _dir="${asr_exp}/${inference_tag}/${inference_asr_model}/${dset}"
+#        _logdir="${_dir}/logdir"
+#        if [ -d ${_dir} ]; then
+#            echo "${_dir} is already exists. if you want to decode again, please delete this dir first."
+#            exit 0
+#        fi
+#        mkdir -p "${_logdir}"
+#        _data="${feats_dir}/${dumpdir}/${dset}"
+#        key_file=${_data}/${scp}
+#        num_scp_file="$(<${key_file} wc -l)"
+#        _nj=$([ $inference_nj -le $num_scp_file ] && echo "$inference_nj" || echo "$num_scp_file")
+#        split_scps=
+#        for n in $(seq "${_nj}"); do
+#            split_scps+=" ${_logdir}/keys.${n}.scp"
+#        done
+#        # shellcheck disable=SC2086
+#        utils/split_scp.pl "${key_file}" ${split_scps}
+#        _opts=
+#        if [ -n "${inference_config}" ]; then
+#            _opts+="--config ${inference_config} "
+#        fi
+#        ${infer_cmd} --gpu "${_ngpu}" --max-jobs-run "${_nj}" JOB=1:"${_nj}" "${_logdir}"/asr_inference.JOB.log \
+#            python -m funasr.bin.asr_inference_launch \
+#                --batch_size 1 \
+#                --ngpu "${_ngpu}" \
+#                --njob ${njob} \
+#                --gpuid_list ${gpuid_list} \
+#                --data_path_and_name_and_type "${_data}/${scp},speech,${type}" \
+#                --key_file "${_logdir}"/keys.JOB.scp \
+#                --asr_train_config "${asr_exp}"/config.yaml \
+#                --asr_model_file "${asr_exp}"/"${inference_asr_model}" \
+#                --output_dir "${_logdir}"/output.JOB \
+#                --mode asr \
+#                ${_opts}
+#
+#        for f in token token_int score text; do
+#            if [ -f "${_logdir}/output.1/1best_recog/${f}" ]; then
+#                for i in $(seq "${_nj}"); do
+#                    cat "${_logdir}/output.${i}/1best_recog/${f}"
+#                done | sort -k1 >"${_dir}/${f}"
+#            fi
+#        done
+#        python utils/compute_wer.py ${_data}/text ${_dir}/text ${_dir}/text.cer
+#        tail -n 3 ${_dir}/text.cer > ${_dir}/text.cer.txt
+#        cat ${_dir}/text.cer.txt
+#    done
+#fi
