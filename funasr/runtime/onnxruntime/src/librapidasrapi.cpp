@@ -103,10 +103,10 @@ extern "C" {
 
 	_RAPIDASRAPI RPASR_RESULT RapidAsrRecogFile(RPASR_HANDLE handle, const char* szWavfile, RPASR_MODE Mode, QM_CALLBACK fnCallback, bool timeStat)
 	{
-		Model* pRecogObj = (Model*)handle;
+        Model* pRecogObj = (Model*)handle;
 		if (!pRecogObj)
 			return nullptr;
-
+		
 		Audio audio(1);
 		if(!audio.loadwav(szWavfile))
 			return nullptr;
