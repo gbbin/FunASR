@@ -56,7 +56,6 @@ test_sets="test_clean test_other dev_clean dev_other"
 
 asr_config=conf/train.yaml
 #asr_config=conf/train_asr_conformer_uttnorm.yaml
-model_dir="baseline_$(basename "${asr_config}" .yaml)_${feats_type}_${lang}_${token_type}_${tag}"
 
 inference_config=conf/decode_asr_transformer.yaml
 #inference_config=conf/decode_asr_transformer_beam60_ctc0.3.yaml
@@ -169,6 +168,7 @@ fi
 world_size=$gpu_num  # run on one machine
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "stage 3: Training on 2-spk simulated dataset"
+#    model_dir="baseline_$(basename "${asr_config}" .yaml)_${feats_type}_${lang}_${token_type}_${tag}"
 #    mkdir -p ${exp_dir}/exp/${model_dir}/simu_train_2spk
 #    mkdir -p ${exp_dir}/exp/${model_dir}/simu_train_2spk/log
 #    INIT_FILE=${exp_dir}/exp/${model_dir}/simu_train_2spk/ddp_init
