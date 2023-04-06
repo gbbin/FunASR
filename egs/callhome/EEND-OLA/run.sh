@@ -206,7 +206,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     average_start=91
     average_end=100
     nlast_models=`eval echo ${exp_dir}/exp/${model_dir}/simu_train_2spk/{$average_start..$average_end}epoch.pb`
-    avg_model=${exp_dir}/exp/${model_dir}/simu_train_2spk/epoch_${average_start}_${average_end}.ave.pb
+    avg_model=${exp_dir}/exp/${model_dir}/simu_train_2spk/${average_start}-${average_end}epoch.ave.pb
     average_nlast_models.py $avg_model $nlast_models
 fi
 
@@ -232,6 +232,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_scp} \
                 --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_scp} \
                 --resume true \
+                --init_param ${exp_dir}/exp/${model_dir}/simu_train_2spk/${average_start}-${average_end}epoch.ave.pb \
                 --output_dir ${exp_dir}/exp/${model_dir}//simu_train_allspk \
                 --config $asr_config \
                 --input_size $feats_dim \
@@ -249,7 +250,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     average_start=91
     average_end=100
     nlast_models=`eval echo ${exp_dir}/exp/${model_dir}/simu_train_allspk/{$average_start..$average_end}epoch.pb`
-    avg_model=${exp_dir}/exp/${model_dir}/simu_train_allspk/epoch_${average_start}_${average_end}.ave.pb
+    avg_model=${exp_dir}/exp/${model_dir}/simu_train_allspk/${average_start}-${average_end}epoch.ave.pb
     average_nlast_models.py $avg_model $nlast_models
 fi
 
