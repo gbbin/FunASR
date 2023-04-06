@@ -169,39 +169,39 @@ train_simu_2spk_config=conf/train_simu_2spk.yaml
 simu_2spk_model_dir="baseline_$(basename "${train_simu_2spk_config}" .yaml)_${tag}"
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "stage 3: Training on 2-spk simulated dataset"
-    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}
-    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}/log
-    INIT_FILE=${exp_dir}/exp/${simu_2spk_model_dir}/ddp_init
-    if [ -f $INIT_FILE ];then
-        rm -f $INIT_FILE
-    fi
-    init_method=file://$(readlink -f $INIT_FILE)
-    echo "$0: init method is $init_method"
-    for ((i = 0; i < $gpu_num; ++i)); do
-        {
-            rank=$i
-            local_rank=$i
-            gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
-            diar_train_eend_ola.py \
-                --gpu_id $gpu_id \
-                --use_preprocessor false \
-                --dataset_type $dataset_type \
-                --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_2spk_scp} \
-                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_2spk_scp} \
-                --resume true \
-                --output_dir ${exp_dir}/exp/${simu_2spk_model_dir} \
-                --config $train_simu_2spk_config \
-                --input_size $feats_dim \
-                --ngpu $gpu_num \
-                --num_worker_count $count \
-                --multiprocessing_distributed true \
-                --dist_init_method $init_method \
-                --dist_world_size $world_size \
-                --dist_rank $rank \
-                --local_rank $local_rank 1> ${exp_dir}/exp/${model_dir}/log/train.log.$i 2>&1
-        } &
-        done
-        wait
+#    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}
+#    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}/log
+#    INIT_FILE=${exp_dir}/exp/${simu_2spk_model_dir}/ddp_init
+#    if [ -f $INIT_FILE ];then
+#        rm -f $INIT_FILE
+#    fi
+#    init_method=file://$(readlink -f $INIT_FILE)
+#    echo "$0: init method is $init_method"
+#    for ((i = 0; i < $gpu_num; ++i)); do
+#        {
+#            rank=$i
+#            local_rank=$i
+#            gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
+#            diar_train_eend_ola.py \
+#                --gpu_id $gpu_id \
+#                --use_preprocessor false \
+#                --dataset_type $dataset_type \
+#                --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_2spk_scp} \
+#                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_2spk_scp} \
+#                --resume true \
+#                --output_dir ${exp_dir}/exp/${simu_2spk_model_dir} \
+#                --config $train_simu_2spk_config \
+#                --input_size $feats_dim \
+#                --ngpu $gpu_num \
+#                --num_worker_count $count \
+#                --multiprocessing_distributed true \
+#                --dist_init_method $init_method \
+#                --dist_world_size $world_size \
+#                --dist_rank $rank \
+#                --local_rank $local_rank 1> ${exp_dir}/exp/${simu_2spk_model_dir}/log/train.log.$i 2>&1
+#        } &
+#        done
+#        wait
 
     average_start=91
     average_end=100
@@ -210,13 +210,13 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     average_nlast_models.py $avg_model $nlast_models
 fi
 
+train_simu_allspk_config=conf/train_simu_allspk.yaml
+simu_allspk_model_dir="baseline_$(basename "${train_simu_allspk_config}" .yaml)_${tag}"
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: Training on all-spk simulated dataset"
-    train_config=conf/train_simu_allspk.yaml
-    model_dir="baseline_$(basename "${train_config}" .yaml)_${tag}"
-    mkdir -p ${exp_dir}/exp/${model_dir}
-    mkdir -p ${exp_dir}/exp/${model_dir}/log
-    INIT_FILE=${exp_dir}/exp/${model_dir}/ddp_init
+    mkdir -p ${exp_dir}/exp/${simu_allspk_model_dir}
+    mkdir -p ${exp_dir}/exp/${simu_allspk_model_dir}/log
+    INIT_FILE=${exp_dir}/exp/${simu_allspk_model_dir}/ddp_init
     if [ -f $INIT_FILE ];then
         rm -f $INIT_FILE
     fi
@@ -234,9 +234,9 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_scp} \
                 --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_scp} \
                 --resume true \
-                --init_param ${exp_dir}/exp/${model_dir}/simu_train_2spk/${average_start}-${average_end}epoch.ave.pb \
-                --output_dir ${exp_dir}/exp/${model_dir} \
-                --config $train_config \
+                --init_param $simu_2spk_model_dir/${average_start}-${average_end}epoch.ave.pb \
+                --output_dir ${exp_dir}/exp/${simu_allspk_model_dir} \
+                --config $train_simu_allspk_config \
                 --input_size $feats_dim \
                 --ngpu $gpu_num \
                 --num_worker_count $count \
@@ -244,15 +244,15 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --dist_init_method $init_method \
                 --dist_world_size $world_size \
                 --dist_rank $rank \
-                --local_rank $local_rank 1> ${exp_dir}/exp/${model_dir}/log/train.log.$i 2>&1
+                --local_rank $local_rank 1> ${exp_dir}/exp/${simu_allspk_model_dir}/log/train.log.$i 2>&1
         } &
         done
         wait
 
-    average_start=91
-    average_end=100
-    nlast_models=`eval echo ${exp_dir}/exp/${model_dir}/{$average_start..$average_end}epoch.pb`
-    avg_model=${exp_dir}/exp/${model_dir}/${average_start}-${average_end}epoch.ave.pb
+    average_start=16
+    average_end=25
+    nlast_models=`eval echo ${exp_dir}/exp/${simu_allspk_model_dir}/{$average_start..$average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${simu_allspk_model_dir}/${average_start}-${average_end}epoch.ave.pb
     average_nlast_models.py $avg_model $nlast_models
 fi
 
