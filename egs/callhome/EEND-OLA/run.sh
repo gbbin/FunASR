@@ -234,7 +234,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_scp} \
                 --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_scp} \
                 --resume true \
-                --init_param $simu_2spk_model_dir/${average_start}-${average_end}epoch.ave.pb \
+                --init_param ${exp_dir}/exp/${simu_2spk_model_dir}/${average_start}-${average_end}epoch.ave.pb \
                 --output_dir ${exp_dir}/exp/${simu_allspk_model_dir} \
                 --config $train_simu_allspk_config \
                 --input_size $feats_dim \
