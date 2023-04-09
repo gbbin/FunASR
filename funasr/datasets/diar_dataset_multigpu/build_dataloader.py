@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from typeguard import check_argument_types
 
-from funasr.datasets.diar_dataset.dataset import DiarizationDataset
+from funasr.datasets.diar_dataset_multigpu.dataset import DiarizationDataset
 from funasr.fileio.read_text import read_2column_text
 from funasr.iterators.abs_iter_factory import AbsIterFactory
 from funasr.samplers.abs_sampler import AbsSampler
@@ -108,7 +108,7 @@ class DiarDataLoader(AbsIterFactory):
         if self.mode == "train":
             np.random.RandomState(epoch + self.seed).shuffle(batches)
         data_loader = DataLoader(self.dataset,
-                                 sampler=batches,
+                                 batch_sampler=batches,
                                  num_workers=self.dataset_conf.get("num_workers", 8),
                                  collate_fn=custom_collate)
         return data_loader
