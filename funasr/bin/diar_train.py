@@ -37,7 +37,7 @@ if __name__ == '__main__':
     assert args.num_worker_count == 1
 
     # re-compute batch size: when dataset type is small
-    if args.dataset_type in ["small", "diarization"]:
+    if args.dataset_type == "small":
         if args.batch_size is not None:
             args.batch_size = args.batch_size * args.ngpu
         if args.batch_bins is not None:
