@@ -22,7 +22,7 @@ class DiarBatchSampler(AbsSampler):
             self,
             batch_size: int,
             key_file: str,
-            shuffle: bool,
+            mode: bool,
             seed: int,
             drop_last: bool = False,
     ):
@@ -36,7 +36,7 @@ class DiarBatchSampler(AbsSampler):
         if len(utt2any) == 0:
             logging.warning(f"{key_file} is empty")
         keys = list(utt2any)
-        if shuffle:
+        if mode == "train":
             np.random.RandomState(seed).shuffle(keys)
         if len(keys) == 0:
             raise RuntimeError(f"0 lines found: {key_file}")
@@ -85,16 +85,17 @@ def custom_collate(batch):
 
 
 class DiarDataLoader(AbsIterFactory):
-    def __init__(self, data_file, dataset_conf, seed, distributed_option):
+    def __init__(self, data_file, dataset_conf, seed, distributed_option, mode):
         self.dataset_conf = dataset_conf
         self.dataset = DiarizationDataset(data_file)
         self.data_loader = None
         self.batch_sampler = DiarBatchSampler(batch_size=self.dataset_conf.get("batch_size", 64),
                                               key_file=data_file,
-                                              shuffle=self.dataset_conf.get("shuffle", False),
+                                              mode=mode,
                                               seed=seed)
         self.seed = seed
         self.distributed_option = distributed_option
+        self.mode = mode
 
     def build_iter(self, epoch, shuffle=True):
         batches = list(self.batch_sampler)
@@ -102,7 +103,7 @@ class DiarDataLoader(AbsIterFactory):
             world_size = self.distributed_option.world_size()
             rank = self.distributed_option.rank
             batches = [batch[rank::world_size] for batch in batches]
-        if shuffle:
+        if self.mode == "train":
             np.random.RandomState(epoch + self.seed).shuffle(batches)
         data_loader = DataLoader(self.dataset,
                                  sampler=batches,

@@ -1386,6 +1386,10 @@ class AbsTask(ABC):
                 from funasr.datasets.diar_dataset.build_dataloader import DiarDataLoader
                 train_iter_factory = DiarDataLoader(args.train_data_file, args.dataset_conf)
                 valid_iter_factory = DiarDataLoader(args.valid_data_file, args.dataset_conf)
+            elif args.dataset_type == "diarization_multigpu":
+                from funasr.datasets.diar_dataset_multigpu.build_dataloader import DiarDataLoader
+                train_iter_factory = DiarDataLoader(args.train_data_file, args.dataset_conf, args.seed, distributed_option, "train")
+                valid_iter_factory = DiarDataLoader(args.valid_data_file, args.dataset_conf, args.seed, distributed_option, "eval")
             else:
                 raise ValueError(f"Not supported dataset_type={args.dataset_type}")
 
