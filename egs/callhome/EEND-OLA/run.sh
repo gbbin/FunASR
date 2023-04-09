@@ -169,39 +169,39 @@ train_simu_2spk_config=conf/train_simu_2spk.yaml
 simu_2spk_model_dir="baseline_$(basename "${train_simu_2spk_config}" .yaml)_${tag}"
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "stage 3: Training on 2-spk simulated dataset"
-#    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}
-#    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}/log
-#    INIT_FILE=${exp_dir}/exp/${simu_2spk_model_dir}/ddp_init
-#    if [ -f $INIT_FILE ];then
-#        rm -f $INIT_FILE
-#    fi
-#    init_method=file://$(readlink -f $INIT_FILE)
-#    echo "$0: init method is $init_method"
-#    for ((i = 0; i < $gpu_num; ++i)); do
-#        {
-#            rank=$i
-#            local_rank=$i
-#            gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
-#            diar_train_eend_ola.py \
-#                --gpu_id $gpu_id \
-#                --use_preprocessor false \
-#                --dataset_type $dataset_type \
-#                --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_2spk_scp} \
-#                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_2spk_scp} \
-#                --resume true \
-#                --output_dir ${exp_dir}/exp/${simu_2spk_model_dir} \
-#                --config $train_simu_2spk_config \
-#                --input_size $feats_dim \
-#                --ngpu $gpu_num \
-#                --num_worker_count $count \
-#                --multiprocessing_distributed true \
-#                --dist_init_method $init_method \
-#                --dist_world_size $world_size \
-#                --dist_rank $rank \
-#                --local_rank $local_rank 1> ${exp_dir}/exp/${simu_2spk_model_dir}/log/train.log.$i 2>&1
-#        } &
-#        done
-#        wait
+    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}
+    mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}/log
+    INIT_FILE=${exp_dir}/exp/${simu_2spk_model_dir}/ddp_init
+    if [ -f $INIT_FILE ];then
+        rm -f $INIT_FILE
+    fi
+    init_method=file://$(readlink -f $INIT_FILE)
+    echo "$0: init method is $init_method"
+    for ((i = 0; i < $gpu_num; ++i)); do
+        {
+            rank=$i
+            local_rank=$i
+            gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
+            diar_train_eend_ola.py \
+                --gpu_id $gpu_id \
+                --use_preprocessor false \
+                --dataset_type $dataset_type \
+                --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_2spk_scp} \
+                --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_2spk_scp} \
+                --resume true \
+                --output_dir ${exp_dir}/exp/${simu_2spk_model_dir} \
+                --config $train_simu_2spk_config \
+                --input_size $feats_dim \
+                --ngpu $gpu_num \
+                --num_worker_count $count \
+                --multiprocessing_distributed true \
+                --dist_init_method $init_method \
+                --dist_world_size $world_size \
+                --dist_rank $rank \
+                --local_rank $local_rank 1> ${exp_dir}/exp/${simu_2spk_model_dir}/log/train.log.$i 2>&1
+        } &
+        done
+        wait
 
     average_start=91
     average_end=100
