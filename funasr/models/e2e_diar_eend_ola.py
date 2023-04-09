@@ -130,6 +130,7 @@ class DiarEENDOLAModel(AbsESPnetModel):
 
         stats = dict()
         stats["pse_loss"] = pse_loss.detach()
+        stats["pit_loss"] = pit_loss.detach()
         stats["attractor_loss"] = attractor_loss.detach()
         stats["loss"] = torch.clone(loss.detach())
         stats["batch_size"] = batch_size
