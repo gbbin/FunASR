@@ -23,6 +23,7 @@ class DiarBatchSampler(AbsSampler):
             self,
             batch_size: int,
             key_file: str,
+            shuffle: bool,
             drop_last: bool = False,
     ):
         assert check_argument_types()
@@ -35,7 +36,8 @@ class DiarBatchSampler(AbsSampler):
         if len(utt2any) == 0:
             logging.warning(f"{key_file} is empty")
         keys = list(utt2any)
-        random.shuffle(keys)
+        if shuffle:
+            random.shuffle(keys)
         if len(keys) == 0:
             raise RuntimeError(f"0 lines found: {key_file}")
 
@@ -88,11 +90,13 @@ class DiarDataLoader(AbsIterFactory):
         self.dataset = DiarizationDataset(data_file)
         self.data_loader = None
         self.batch_sampler = DiarBatchSampler(batch_size=self.dataset_conf.get("batch_size", 64),
-                                              key_file=data_file)
+                                              key_file=data_file,
+                                              shuffle=self.dataset_conf.get("shuffle", False), )
 
     def build_iter(self, epoch, shuffle=True):
         batches = list(self.batch_sampler)
-        random.shuffle(batches)
+        if shuffle:
+            random.shuffle(batches)
         data_loader = DataLoader(self.dataset,
                                  sampler=batches,
                                  num_workers=self.dataset_conf.get("num_workers", 8),
