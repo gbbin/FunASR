@@ -103,7 +103,7 @@ class DiarDataLoader(AbsIterFactory):
         batches = list(self.batch_sampler)
         if self.distributed_option.distributed:
             world_size = self.distributed_option.dist_world_size
-            rank = self.distributed_option.rank
+            rank = self.distributed_option.dist_rank
             batches = [batch[rank::world_size] for batch in batches]
         if self.mode == "train":
             np.random.RandomState(epoch + self.seed).shuffle(batches)
