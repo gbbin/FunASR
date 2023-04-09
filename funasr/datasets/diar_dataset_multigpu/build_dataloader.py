@@ -90,7 +90,7 @@ class DiarDataLoader(AbsIterFactory):
         self.dataset = DiarizationDataset(data_file)
         batch_size = self.dataset_conf.get("batch_size", 64)
         if distributed_option.distributed:
-            batch_size = batch_size * distributed_option.world_size
+            batch_size = batch_size * distributed_option.dist_world_size
         self.batch_sampler = DiarBatchSampler(batch_size=batch_size,
                                               key_file=data_file,
                                               mode=mode,
@@ -102,7 +102,7 @@ class DiarDataLoader(AbsIterFactory):
     def build_iter(self, epoch, shuffle=True):
         batches = list(self.batch_sampler)
         if self.distributed_option.distributed:
-            world_size = self.distributed_option.world_size
+            world_size = self.distributed_option.dist_world_size
             rank = self.distributed_option.rank
             batches = [batch[rank::world_size] for batch in batches]
         if self.mode == "train":
