@@ -1,5 +1,4 @@
 import logging
-import random
 from typing import Iterator
 from typing import Tuple
 
@@ -24,6 +23,7 @@ class DiarBatchSampler(AbsSampler):
             batch_size: int,
             key_file: str,
             shuffle: bool,
+            seed: int,
             drop_last: bool = False,
     ):
         assert check_argument_types()
@@ -37,7 +37,7 @@ class DiarBatchSampler(AbsSampler):
             logging.warning(f"{key_file} is empty")
         keys = list(utt2any)
         if shuffle:
-            random.shuffle(keys)
+            np.random.RandomState(seed).shuffle(keys)
         if len(keys) == 0:
             raise RuntimeError(f"0 lines found: {key_file}")
 
@@ -85,18 +85,25 @@ def custom_collate(batch):
 
 
 class DiarDataLoader(AbsIterFactory):
-    def __init__(self, data_file, dataset_conf):
+    def __init__(self, data_file, dataset_conf, seed, distributed_option):
         self.dataset_conf = dataset_conf
         self.dataset = DiarizationDataset(data_file)
         self.data_loader = None
         self.batch_sampler = DiarBatchSampler(batch_size=self.dataset_conf.get("batch_size", 64),
                                               key_file=data_file,
-                                              shuffle=self.dataset_conf.get("shuffle", False), )
+                                              shuffle=self.dataset_conf.get("shuffle", False),
+                                              seed=seed)
+        self.seed = seed
+        self.distributed_option = distributed_option
 
     def build_iter(self, epoch, shuffle=True):
         batches = list(self.batch_sampler)
+        if self.distributed_option.distributed:
+            world_size = self.distributed_option.world_size()
+            rank = self.distributed_option.rank
+            batches = [batch[rank::world_size] for batch in batches]
         if shuffle:
-            random.shuffle(batches)
+            np.random.RandomState(epoch + self.seed).shuffle(batches)
         data_loader = DataLoader(self.dataset,
                                  sampler=batches,
                                  num_workers=self.dataset_conf.get("num_workers", 8),
