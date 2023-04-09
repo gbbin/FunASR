@@ -194,7 +194,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
                 --input_size $feats_dim \
                 --ngpu $gpu_num \
                 --num_worker_count $count \
-                --find_unused_parameters true \
+                --unused_parameters true \
                 --multiprocessing_distributed true \
                 --dist_init_method $init_method \
                 --dist_world_size $world_size \
@@ -241,7 +241,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --input_size $feats_dim \
                 --ngpu $gpu_num \
                 --num_worker_count $count \
-                --find_unused_parameters true \
+                --unused_parameters true \
                 --multiprocessing_distributed true \
                 --dist_init_method $init_method \
                 --dist_world_size $world_size \
