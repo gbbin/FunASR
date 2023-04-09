@@ -22,7 +22,7 @@ class DiarBatchSampler(AbsSampler):
             self,
             batch_size: int,
             key_file: str,
-            mode: bool,
+            mode: str,
             seed: int,
             drop_last: bool = False,
     ):
@@ -88,8 +88,10 @@ class DiarDataLoader(AbsIterFactory):
     def __init__(self, data_file, dataset_conf, seed, distributed_option, mode):
         self.dataset_conf = dataset_conf
         self.dataset = DiarizationDataset(data_file)
-        self.data_loader = None
-        self.batch_sampler = DiarBatchSampler(batch_size=self.dataset_conf.get("batch_size", 64),
+        batch_size = self.dataset_conf.get("batch_size", 64)
+        if distributed_option.distributed:
+            batch_size = batch_size * distributed_option.world_size
+        self.batch_sampler = DiarBatchSampler(batch_size=batch_size,
                                               key_file=data_file,
                                               mode=mode,
                                               seed=seed)
@@ -100,7 +102,7 @@ class DiarDataLoader(AbsIterFactory):
     def build_iter(self, epoch, shuffle=True):
         batches = list(self.batch_sampler)
         if self.distributed_option.distributed:
-            world_size = self.distributed_option.world_size()
+            world_size = self.distributed_option.world_size
             rank = self.distributed_option.rank
             batches = [batch[rank::world_size] for batch in batches]
         if self.mode == "train":
