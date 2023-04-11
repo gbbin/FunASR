@@ -2,8 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import paraformer_pb2 as paraformer__pb2
-
+from proto import paraformer_pb2 as paraformer__pb2
 
 class ASRStub(object):
     """Missing associated documentation comment in .proto file."""
