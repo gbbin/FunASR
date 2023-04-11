@@ -49,13 +49,13 @@ python -m grpc_tools.protoc  --proto_path=./proto -I ./proto    --python_out=. -
 
 ```
 # Start server.
-python grpc_main_server.py --port 10095 --backend pipeline
+python grpc_server.py --port 10095 --backend pipeline
 ```
 
 If you want run server with onnxruntime, please set `backend` and `onnx_dir`.
 ```
 # Start server.
-python grpc_main_server.py --port 10095 --backend onnxruntime --onnx_dir /models/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch
+python grpc_server.py --port 10095 --backend onnxruntime --onnx_dir /models/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch
 ```
 
 ## For the client
@@ -80,7 +80,7 @@ python -m grpc_tools.protoc  --proto_path=./proto -I ./proto    --python_out=. -
 ### Start grpc client
 ```
 # Start client.
-python grpc_main_client_mic.py --host 127.0.0.1 --port 10095
+python grpc_client.py --host 127.0.0.1 --port 10095
 ```
 
 
