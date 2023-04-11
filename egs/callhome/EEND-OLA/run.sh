@@ -167,6 +167,8 @@ fi
 world_size=$gpu_num  # run on one machine
 train_simu_2spk_config=conf/train_simu_2spk.yaml
 simu_2spk_model_dir="baseline_$(basename "${train_simu_2spk_config}" .yaml)_${tag}"
+simu_2spk_average_start=91
+simu_2spk_average_end=100
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "stage 3: Training on 2-spk simulated dataset"
     mkdir -p ${exp_dir}/exp/${simu_2spk_model_dir}
@@ -204,15 +206,15 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         done
         wait
 
-    average_start=91
-    average_end=100
-    nlast_models=`eval echo ${exp_dir}/exp/${simu_2spk_model_dir}/{$average_start..$average_end}epoch.pb`
-    avg_model=${exp_dir}/exp/${simu_2spk_model_dir}/${average_start}-${average_end}epoch.ave.pb
+    nlast_models=`eval echo ${exp_dir}/exp/${simu_2spk_model_dir}/{$simu_2spk_average_start..$simu_2spk_average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${simu_2spk_model_dir}/${simu_2spk_average_start}-${simu_2spk_average_end}epoch.ave.pb
     average_nlast_models.py $avg_model $nlast_models
 fi
 
 train_simu_allspk_config=conf/train_simu_allspk.yaml
 simu_allspk_model_dir="baseline_$(basename "${train_simu_allspk_config}" .yaml)_${tag}"
+simu_allspk_average_start=16
+simu_allspk_average_end=25
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: Training on all-spk simulated dataset"
     mkdir -p ${exp_dir}/exp/${simu_allspk_model_dir}
@@ -235,7 +237,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --train_data_file $feats_dir/$dumpdir/${train_set}/${simu_scp} \
                 --valid_data_file $feats_dir/$dumpdir/${valid_set}/${simu_scp} \
                 --resume true \
-                --init_param ${exp_dir}/exp/${simu_2spk_model_dir}/${average_start}-${average_end}epoch.ave.pb \
+                --init_param ${exp_dir}/exp/${simu_2spk_model_dir}/${simu_2spk_average_start}-${simu_2spk_average_end}epoch.ave.pb \
                 --output_dir ${exp_dir}/exp/${simu_allspk_model_dir} \
                 --config $train_simu_allspk_config \
                 --input_size $feats_dim \
@@ -251,10 +253,8 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         done
         wait
 
-    average_start=16
-    average_end=25
-    nlast_models=`eval echo ${exp_dir}/exp/${simu_allspk_model_dir}/{$average_start..$average_end}epoch.pb`
-    avg_model=${exp_dir}/exp/${simu_allspk_model_dir}/${average_start}-${average_end}epoch.ave.pb
+    nlast_models=`eval echo ${exp_dir}/exp/${simu_allspk_model_dir}/{$simu_allspk_average_start..$simu_allspk_average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${simu_allspk_model_dir}/${simu_allspk_average_start}-${simu_allspk_average_end}epoch.ave.pb
     average_nlast_models.py $avg_model $nlast_models
 fi
 
@@ -282,7 +282,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
                 --train_data_file $feats_dir/$dumpdir_chunk2000/${train_set}/${simu_scp} \
                 --valid_data_file $feats_dir/$dumpdir_chunk2000/${valid_set}/${simu_scp} \
                 --resume true \
-                --init_param ${exp_dir}/exp/${simu_allspk_model_dir}/${average_start}-${average_end}epoch.ave.pb \
+                --init_param ${exp_dir}/exp/${simu_allspk_model_dir}/${simu_allspk_average_start}-${simu_allspk_average_end}epoch.ave.pb \
                 --output_dir ${exp_dir}/exp/${simu_allspk_chunk2000_model_dir} \
                 --config $train_simu_allspk_chunk2000_config \
                 --input_size $feats_dim \
@@ -301,6 +301,8 @@ fi
 
 train_callhome_allspk_config=conf/train_callhome_allspk_chunk2000.yaml
 callhome_allspk_chunk2000_model_dir="baseline_$(basename "${train_callhome_allspk_config}" .yaml)_${tag}"
+callhome_average_start=91
+callhome_average_end=100
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "stage 6: Training on all-spk callhome dataset with chunksize 2000"
     mkdir -p ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}
@@ -339,10 +341,8 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
         done
         wait
 
-    average_start=91
-    average_end=100
-    nlast_models=`eval echo ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/{$average_start..$average_end}epoch.pb`
-    avg_model=${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/${average_start}-${average_end}epoch.ave.pb
+    nlast_models=`eval echo ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/{$callhome_average_start..$callhome_average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/${callhome_average_start}-${callhome_average_end}epoch.ave.pb
     average_nlast_models.py $avg_model $nlast_models
 fi
 
