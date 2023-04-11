@@ -23,7 +23,7 @@ simu_2spk_scp=feats_2spk.scp
 simu_scp=feats.scp
 callhome_scp=feats.scp
 stage=5
-stop_stage=6
+stop_stage=5
 
 # feature configuration
 feats_dim=345
