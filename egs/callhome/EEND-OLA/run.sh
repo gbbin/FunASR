@@ -17,9 +17,11 @@ feats_dir="/nfs/wangjiaming.wjm/EEND_ARK_DATA" #feature output dictionary
 exp_dir="."
 dumpdir=dump/simu_data/data
 dumpdir_chunk2000=dump/simu_data_chunk2000/data
+callhome_dumpdir_chunk2000=dump/callhome_chunk2000/data
 dataset_type=diarization
 simu_2spk_scp=feats_2spk.scp
 simu_scp=feats.scp
+callhome_scp=feats.scp
 stage=5
 stop_stage=6
 
@@ -49,7 +51,8 @@ set -o pipefail
 
 train_set=train
 valid_set=dev
-test_sets="test_clean test_other dev_clean dev_other"
+callhome_train_set=callhome1_allspk
+callhome_dev_set=callhome2_allspk
 
 #asr_config=conf/train_asr_conformer_uttnorm.yaml
 
@@ -255,7 +258,8 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     average_nlast_models.py $avg_model $nlast_models
 fi
 
-simu_allspk_chunk2000_model_dir="baseline_$(basename "${train_simu_allspk_config}" .yaml)_${tag}/finetune_chunk2000"
+train_simu_allspk_chunk2000_config=conf/train_simu_allspk_chunk2000.yaml
+simu_allspk_chunk2000_model_dir="baseline_$(basename "${train_simu_allspk_chunk2000_config}" .yaml)_${tag}"
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Training on all-spk simulated dataset with chunksize 2000"
     mkdir -p ${exp_dir}/exp/${simu_allspk_chunk2000_model_dir}
@@ -266,9 +270,6 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     fi
     init_method=file://$(readlink -f $INIT_FILE)
     echo "$0: init method is $init_method"
-    max_epoch=1
-    batch_size=8
-    lr=0.00001
     for ((i = 0; i < $gpu_num; ++i)); do
         {
             rank=$i
@@ -282,11 +283,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
                 --valid_data_file $feats_dir/$dumpdir_chunk2000/${valid_set}/${simu_scp} \
                 --resume true \
                 --init_param ${exp_dir}/exp/${simu_allspk_model_dir}/${average_start}-${average_end}epoch.ave.pb \
-                --max-epochs ${max_epoch} \
-                --batchsize ${batch_size} \
-                --lr ${lr} \
                 --output_dir ${exp_dir}/exp/${simu_allspk_chunk2000_model_dir} \
-                --config $train_simu_allspk_config \
+                --config $train_simu_allspk_chunk2000_config \
                 --input_size $feats_dim \
                 --ngpu $gpu_num \
                 --num_worker_count $count \
@@ -299,6 +297,53 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
         } &
         done
         wait
+fi
+
+train_callhome_allspk_config=conf/train_callhome_allspk_chunk2000.yaml
+callhome_allspk_chunk2000_model_dir="baseline_$(basename "${train_callhome_allspk_config}" .yaml)_${tag}"
+if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
+    echo "stage 6: Training on all-spk callhome dataset with chunksize 2000"
+    mkdir -p ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}
+    mkdir -p ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/log
+    INIT_FILE=${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/ddp_init
+    if [ -f $INIT_FILE ];then
+        rm -f $INIT_FILE
+    fi
+    init_method=file://$(readlink -f $INIT_FILE)
+    echo "$0: init method is $init_method"
+    for ((i = 0; i < $gpu_num; ++i)); do
+        {
+            rank=$i
+            local_rank=$i
+            gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
+            diar_train_eend_ola.py \
+                --gpu_id $gpu_id \
+                --use_preprocessor false \
+                --dataset_type $dataset_type \
+                --train_data_file $feats_dir/$callhome_dumpdir_chunk2000/${callhome_train_set}/${callhome_scp} \
+                --valid_data_file $feats_dir/$callhome_dumpdir_chunk2000/${callhome_dev_set}/${callhome_scp} \
+                --resume true \
+                --init_param ${exp_dir}/exp/${simu_allspk_chunk2000_model_dir}/1epoch.pb \
+                --output_dir ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir} \
+                --config $train_callhome_allspk_config \
+                --input_size $feats_dim \
+                --ngpu $gpu_num \
+                --num_worker_count $count \
+                --unused_parameters true \
+                --multiprocessing_distributed true \
+                --dist_init_method $init_method \
+                --dist_world_size $world_size \
+                --dist_rank $rank \
+                --local_rank $local_rank 1> ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/log/train.log.$i 2>&1
+        } &
+        done
+        wait
+
+    average_start=91
+    average_end=100
+    nlast_models=`eval echo ${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/{$average_start..$average_end}epoch.pb`
+    avg_model=${exp_dir}/exp/${callhome_allspk_chunk2000_model_dir}/${average_start}-${average_end}epoch.ave.pb
+    average_nlast_models.py $avg_model $nlast_models
 fi
 
 ## Testing Stage
