@@ -109,7 +109,7 @@ class Speech2VadSegment:
             fbanks, fbanks_len = self.frontend.forward_fbank(speech, speech_lengths)
             feats, feats_len = self.frontend.forward_lfr_cmvn(fbanks, fbanks_len)
             fbanks = to_device(fbanks, device=self.device)
-            feats = to_device(feats, device=self.device)
+            # feats = to_device(feats, device=self.device)
             feats_len = feats_len.int()
         else:
             raise Exception("Need to extract feats first, please configure frontend configuration")
@@ -217,40 +217,42 @@ def inference(
         dtype: str = "float32",
         seed: int = 0,
         num_workers: int = 1,
+        online: bool = False,
         **kwargs,
 ):
-    inference_pipeline = inference_modelscope(
-        batch_size=batch_size,
-        ngpu=ngpu,
-        log_level=log_level,
-        vad_infer_config=vad_infer_config,
-        vad_model_file=vad_model_file,
-        vad_cmvn_file=vad_cmvn_file,
-        key_file=key_file,
-        allow_variable_data_keys=allow_variable_data_keys,
-        output_dir=output_dir,
-        dtype=dtype,
-        seed=seed,
-        num_workers=num_workers,
-        **kwargs,
-    )
-    inference_pipeline_online = inference_modelscope_online(
-        batch_size=batch_size,
-        ngpu=ngpu,
-        log_level=log_level,
-        vad_infer_config=vad_infer_config,
-        vad_model_file=vad_model_file,
-        vad_cmvn_file=vad_cmvn_file,
-        key_file=key_file,
-        allow_variable_data_keys=allow_variable_data_keys,
-        output_dir=output_dir,
-        dtype=dtype,
-        seed=seed,
-        num_workers=num_workers,
-        **kwargs,
-    )
-    return inference_pipeline(data_path_and_name_and_type, raw_inputs),\
-           inference_pipeline_online(data_path_and_name_and_type, raw_inputs)
+    if not online:
+        inference_pipeline = inference_modelscope(
+            batch_size=batch_size,
+            ngpu=ngpu,
+            log_level=log_level,
+            vad_infer_config=vad_infer_config,
+            vad_model_file=vad_model_file,
+            vad_cmvn_file=vad_cmvn_file,
+            key_file=key_file,
+            allow_variable_data_keys=allow_variable_data_keys,
+            output_dir=output_dir,
+            dtype=dtype,
+            seed=seed,
+            num_workers=num_workers,
+            **kwargs,
+        )
+    else:
+        inference_pipeline = inference_modelscope_online(
+            batch_size=batch_size,
+            ngpu=ngpu,
+            log_level=log_level,
+            vad_infer_config=vad_infer_config,
+            vad_model_file=vad_model_file,
+            vad_cmvn_file=vad_cmvn_file,
+            key_file=key_file,
+            allow_variable_data_keys=allow_variable_data_keys,
+            output_dir=output_dir,
+            dtype=dtype,
+            seed=seed,
+            num_workers=num_workers,
+            **kwargs,
+        )
+    return inference_pipeline(data_path_and_name_and_type, raw_inputs)
 
 def inference_modelscope(
         batch_size: int,
@@ -541,6 +543,11 @@ def get_parser():
         "--vad_cmvn_file",
         type=str,
         help="Global cmvn file",
+    )
+    group.add_argument(
+        "--online",
+        type=str,
+        help="decoding mode",
     )
 
     group = parser.add_argument_group("infer related")
