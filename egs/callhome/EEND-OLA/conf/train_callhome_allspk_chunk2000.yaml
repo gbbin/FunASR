@@ -11,6 +11,7 @@ encoder_decoder_attractor_conf:
 model: eend_ola
 model_conf:
     max_n_speaker: 8
+    attractor_loss_weight: 0.01
 
 accum_grad: 1
 max_epoch: 100
