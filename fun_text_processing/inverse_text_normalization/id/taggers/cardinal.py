@@ -54,14 +54,11 @@ class CardinalFst(GraphFst):
         )
         graph_thousand = pynini.cross("ribu", "") | pynini.cross("seribu", "")
         graph_one_thousand_component = pynini.union(pynini.cross("ribu", "1") | pynini.cross("seribu", "1"))
-        graph_thousand_cents = pynini.cross("seribu", "10") | pynini.cross("ribu","10") | pynini.union(graph_thousand, pynutil.insert(""))
         graph_thousands = pynini.union(
             graph_hundred_component_at_least_one_none_zero_digit + delete_space + (pynutil.delete("ribu") | pynutil.delete("seribu")),
             pynutil.insert("000", weight=0.1),
         )
-        graph_thousand_component = pynini.union(graph_digit + delete_space + graph_thousand, pynutil.insert("000"))
-        graph_thousand_component += delete_space
-        graph_thousands = graph_thousands | graph_thousand_cents | graph_thousand_component | graph_one_thousand_component
+        graph_thousands = graph_thousands | (pynutil.insert("00") + graph_one_thousand_component)
 
         graph_million = pynini.union(
             graph_hundred_component_at_least_one_none_zero_digit + delete_space + (pynutil.delete("juta") | pynutil.delete("sejuta")),
