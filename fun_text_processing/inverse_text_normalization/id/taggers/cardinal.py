@@ -27,10 +27,10 @@ class CardinalFst(GraphFst):
         graph_hundreds = pynini.string_file(get_abs_path("data/numbers/hundreds.tsv"))
         graph_thousand = pynini.string_file(get_abs_path("data/numbers/thousand.tsv"))
 
-        graph_cents = pynini.cross("seratus", "100") | pynini.cross("ratus", "100") | pynini.union(graph_hundreds, pynutil.insert("00"))
+        
         graph_hundred = pynini.cross("ratus", "") | pynini.cross("seratus", "")
 
-        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred, pynutil.insert("00"))
+        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred, pynutil.insert("0"))
         graph_hundred_component += delete_space
         graph_hundred_component += pynini.union(
             graph_teen | pynutil.insert("00"),
@@ -44,7 +44,7 @@ class CardinalFst(GraphFst):
                 (graph_ties | pynutil.insert("0")) + delete_space + (
                             graph_digit | pynutil.insert("0")),
         )
-        graph_hundred_component = graph_hundred_component | graph_cents | graph_one_hundred_component
+        graph_hundred_component = graph_hundred_component | graph_one_hundred_component
 
         graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
             pynini.closure(DAMO_DIGIT) + (DAMO_DIGIT - "0") + pynini.closure(DAMO_DIGIT)
